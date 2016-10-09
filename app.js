@@ -12,10 +12,9 @@ const User = require('./models/user.js');
 // Connect to DB
 const mongoose = require('mongoose');
 if (!process.env.MONGOLAB_URI) {
+  console.log('ENV varible MONGOLAB_URI needs to be set!!');
   process.exit(1);
 }
-process.exit(1);
-console.log('here');
 mongoose.connect(process.env.MONGOLAB_URI);
 
 // Parse Response Body
