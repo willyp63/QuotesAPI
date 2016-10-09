@@ -1,3 +1,5 @@
+'use strict'
+
 const phone = require('node-phonenumber');
 const phoneUtil = phone.PhoneNumberUtil.getInstance();
 

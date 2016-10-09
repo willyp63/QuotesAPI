@@ -1,3 +1,5 @@
+'use strict'
+
 const jwt = require('jwt-simple');
 const crypto = require('crypto');
 const moment = require('moment');

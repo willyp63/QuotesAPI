@@ -1,3 +1,5 @@
+'use strict'
+
 const Quote = require('../models/quote.js');
 
 const formatPhone = require('../util/formatPhone.js');
