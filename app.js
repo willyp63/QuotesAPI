@@ -28,7 +28,7 @@ app.use(headers);
 // User Auth
 app.post('/auth/register', authCtrl.register);
 app.post('/auth/login', authCtrl.login);
-app.get('/auth/refresh', authCtrl.requireAuth, authCtrl.refreshToken);
+app.post('/auth/logout', authCtrl.requireAuth, authCtrl.logout);
 
 // Quotes
 app.get('/quotes', authCtrl.requireAuth, quoteCtrl.all); // remove

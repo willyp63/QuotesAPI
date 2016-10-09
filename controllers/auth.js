@@ -19,42 +19,44 @@ module.exports = {
 
     // extract payload
     const token = req.header("Authorization").split(' ')[1];
-    let payload;
     try {
-      payload = jwt.decode(token, "secret");
-    } catch (e) {
-      return res.status(401).send({message: "Invalid Auth Token."});
-    }
-
-    // check token expiration
-    if (payload.exp <= moment().unix()) {
-      // check if session is still open
-      User.findOne({
-        _id: payload.sub.userId,
-        sessionId: payload.sub.sessionId
-      }, function (err, existingUser) {
-        if (existingUser) {
-          // issue new auth token and ask that request be made again
-          return res.status(401).send({message: "Your auth token has expired. Here's a new one to try again with.",
-                                       token: createToken(existingUser)});
-        } else {
-          return res.status(401).send({message: "Invalid Auth Token."});
-        }
-      })
-    } else {
-      // attach userId to request
+      // decode token and attach userId to request
+      const payload = jwt.decode(token, "secret");
       req._userId = payload.sub.userId;
       next();
+    } catch (e) {
+      try {
+        // decode even if expired
+        const payload = jwt.decode(token, "secret", true);
+
+        // check if session is still open
+        User.findOne({
+          _id: payload.sub.userId,
+          sessionId: payload.sub.sessionId
+        }, function (err, existingUser) {
+          if (existingUser) {
+            // issue new auth token and ask that request be made again
+            return res.status(401).send({message: "Your auth token has expired. Here's a new one to try again with.",
+                                         token: createToken(existingUser)});
+          } else {
+            // user has logged out
+            return res.status(401).send({message: "Blah Blah Invalid Auth Token."});
+          }
+        });
+      } catch (e) {
+        console.log(e);
+        return res.status(401).send({message: "Invalid Auth Token."});
+      }
     }
   },
   register: function (req, res) {
+    // require params
     if (!req.body.phone || !req.body.pwd || !req.body.fname || !req.body.lname) {
       return res.status(409).send({message: "Please provide a fname, lname, phone, and pwd."});
     }
 
-    const phoneNumber = formatPhone(req.body.phone);
-
     // check for existing user
+    const phoneNumber = formatPhone(req.body.phone);
     User.findOne({
       phone: phoneNumber
     }, function (err, existingUser) {
@@ -63,13 +65,13 @@ module.exports = {
       }
 
       // create new user
-      randomString(function (sessionId) {
+      randomString(function (newSessionId) {
         const user = new User({
           fname: req.body.fname,
           lname: req.body.lname,
           phone: phoneNumber,
           pwd: req.body.pwd,
-          sessionId: sessionId
+          sessionId: newSessionId
         });
 
         user.save(function (err, result) {
@@ -82,15 +84,17 @@ module.exports = {
     });
   },
   login: function (req, res) {
+    // require params
     if (!req.body.phone || !req.body.pwd) {
       return res.status(409).send({message: "Please provide a phone and pwd."});
     }
 
+    // look up user by phone
     const phoneNumber = formatPhone(req.body.phone);
-
     User.findOne({
       phone: phoneNumber
     }, function (err, existingUser) {
+      // check user and password
       if (!existingUser || existingUser.pwd !== req.body.pwd) {
         return res.status(401).send({message: "Invalid phone number and/or password."});
       }
@@ -98,11 +102,17 @@ module.exports = {
     });
   },
   logout: function (req, res) {
+    // change user's sessionId to a new random string
     randomString(function (newSessionId) {
       User.update({
-        _id: req.userId
+        _id: req._userId
       }, {
-        $set: {sessionId: newSessionId}
+        sessionId: newSessionId
+      }, {}, function (err, newUser) {
+        if (err) {
+          return res.status(500).send({message: err.message});
+        }
+        res.status(200).send({message: "You're now logged out."});
       });
     });
   }
@@ -114,13 +124,13 @@ function createToken (user) {
       userId: user._id,
       sessionId: user.sessionId
     },
-    exp: moment().add(1, 'minutes').unix()
+    exp: moment().add(30, 'minutes').unix()
   };
   return jwt.encode(payload, 'secret');
 }
 
 function randomString (cb) {
-  crypto.randomBytes(48, function(err, buffer) {
+  crypto.randomBytes(32, function(err, buffer) {
     cb(buffer.toString('hex'));
   });
 }
