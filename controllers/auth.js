@@ -115,6 +115,17 @@ module.exports = {
         res.status(200).send({message: "You're now logged out."});
       });
     });
+  },
+  refresh: function (req, res) {
+    // extract payload
+    const token = req.header("Authorization").split(' ')[1];
+    const payload = jwt.decode(token, "secret");
+
+    // send new token with same info
+    res.status(200).send({token: createToken({
+      _id: payload.sub.userId,
+      sessionId: payload.sub.sessionId
+    })});
   }
 };
 

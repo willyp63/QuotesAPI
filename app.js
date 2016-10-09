@@ -29,6 +29,7 @@ app.use(headers);
 app.post('/auth/register', authCtrl.register);
 app.post('/auth/login', authCtrl.login);
 app.post('/auth/logout', authCtrl.requireAuth, authCtrl.logout);
+app.post('/auth/refresh', authCtrl.requireAuth, authCtrl.refresh);
 
 // Quotes
 app.get('/quotes', authCtrl.requireAuth, quoteCtrl.all); // remove
