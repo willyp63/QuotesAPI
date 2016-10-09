@@ -36,8 +36,8 @@ module.exports = {
     next();
   },
   register: function (req, res) {
-    if (!req.body.phone || !req.body.pwd) {
-      return res.status(409).send({message: "Please provide a phone and pwd."});
+    if (!req.body.phone || !req.body.pwd || !req.body.fname || !req.body.lname) {
+      return res.status(409).send({message: "Please provide a fname, lname, phone, and pwd."});
     }
 
     const phoneNumber = formatPhone(req.body.phone);
@@ -52,6 +52,8 @@ module.exports = {
 
       // create new user
       const user = new User({
+        fname: req.body.fname,
+        lname: req.body.lname,
         phone: phoneNumber,
         pwd: req.body.pwd
       });
@@ -85,7 +87,7 @@ function createToken (user) {
   const payload = {
     userId: user._id,
     iat: moment().unix(),
-    exp: moment().add(60, 'days').unix()
+    exp: moment().add(2, 'days').unix()
   };
   return jwt.encode(payload, 'secret');
 }
