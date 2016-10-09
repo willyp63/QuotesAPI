@@ -9,7 +9,8 @@ const User = require('./models/user.js');
 
 // Connect to DB
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://wilpirino:quotes@ds053156.mlab.com:53156/wilpirino-quotes');
+console.log(process.env.MONGOLAB_URI);
+mongoose.connect(process.env.MONGOLAB_URI);
 
 // Parse Response Body
 const bodyParser = require('body-parser');
