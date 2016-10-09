@@ -11,7 +11,11 @@ const User = require('./models/user.js');
 
 // Connect to DB
 const mongoose = require('mongoose');
-console.log(process.env.MONGOLAB_URI);
+if (!process.env.MONGOLAB_URI) {
+  process.exit(1);
+}
+process.exit(1);
+console.log('here');
 mongoose.connect(process.env.MONGOLAB_URI);
 
 // Parse Response Body
