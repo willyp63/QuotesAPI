@@ -26,14 +26,26 @@ module.exports = {
       return res.status(401).send({message: "Invalid Auth Token."});
     }
 
-    // check payload expiration
+    // check token expiration
     if (payload.exp <= moment().unix()) {
-      return res.status(401).send({message: "Your Auth Token has expired."});
+      // check if session is still open
+      User.findOne({
+        _id: payload.sub.userId,
+        sessionId: payload.sub.sessionId
+      }, function (err, existingUser) {
+        if (existingUser) {
+          // issue new auth token and ask that request be made again
+          return res.status(401).send({message: "Your auth token has expired. Here's a new one to try again with.",
+                                       token: createToken(existingUser)});
+        } else {
+          return res.status(401).send({message: "Invalid Auth Token."});
+        }
+      })
+    } else {
+      // attach userId to request
+      req._userId = payload.sub.userId;
+      next();
     }
-
-    // attach userId to request
-    req._userId = payload.userId;
-    next();
   },
   register: function (req, res) {
     if (!req.body.phone || !req.body.pwd || !req.body.fname || !req.body.lname) {
@@ -51,22 +63,29 @@ module.exports = {
       }
 
       // create new user
-      const user = new User({
-        fname: req.body.fname,
-        lname: req.body.lname,
-        phone: phoneNumber,
-        pwd: req.body.pwd
-      });
+      randomString(function (sessionId) {
+        const user = new User({
+          fname: req.body.fname,
+          lname: req.body.lname,
+          phone: phoneNumber,
+          pwd: req.body.pwd,
+          sessionId: sessionId
+        });
 
-      user.save(function (err, result) {
-        if (err) {
-          return res.status(500).send({message: err.message});
-        }
-        res.status(200).send({token: createToken(result)});
+        user.save(function (err, result) {
+          if (err) {
+            return res.status(500).send({message: err.message});
+          }
+          res.status(200).send({token: createToken(result)});
+        });
       });
     });
   },
   login: function (req, res) {
+    if (!req.body.phone || !req.body.pwd) {
+      return res.status(409).send({message: "Please provide a phone and pwd."});
+    }
+
     const phoneNumber = formatPhone(req.body.phone);
 
     User.findOne({
@@ -78,16 +97,30 @@ module.exports = {
       res.status(200).send({token: createToken(existingUser)});
     });
   },
-  refreshToken: function (req, res) {
-    res.status(200).send({token: createToken({_id: req._userId})});
+  logout: function (req, res) {
+    randomString(function (newSessionId) {
+      User.update({
+        _id: req.userId
+      }, {
+        $set: {sessionId: newSessionId}
+      });
+    });
   }
 };
 
 function createToken (user) {
   const payload = {
-    userId: user._id,
-    iat: moment().unix(),
-    exp: moment().add(2, 'days').unix()
+    sub: {
+      userId: user._id,
+      sessionId: user.sessionId
+    },
+    exp: moment().add(1, 'minutes').unix()
   };
   return jwt.encode(payload, 'secret');
+}
+
+function randomString (cb) {
+  crypto.randomBytes(48, function(err, buffer) {
+    cb(buffer.toString('hex'));
+  });
 }
