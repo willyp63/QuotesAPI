@@ -79,7 +79,7 @@ module.exports = {
             if (err) {
               return res.status(500).send({message: err.message});
             }
-            res.status(200).send({token: createToken(result)});
+            res.status(200).send({token: createToken(result), user: result});
           });
         });
       });
@@ -103,7 +103,7 @@ module.exports = {
         if (!existingUser || existingUser.pwd !== req.body.pwd) {
           return res.status(401).send({message: "Invalid phone number and/or password."});
         }
-        res.status(200).send({token: createToken(existingUser)});
+        res.status(200).send({token: createToken(existingUser), user: existingUser});
       });
     } catch (e) {
       res.status(401).send({message: "That's not a valid phone number."});
