@@ -56,32 +56,36 @@ module.exports = {
     }
 
     // check for existing user
-    const phoneNumber = formatPhone(req.body.phone);
-    User.findOne({
-      phone: phoneNumber
-    }, function (err, existingUser) {
-      if (existingUser) {
-        return res.status(409).send({message: "Phone number is already registered."});
-      }
+    try {
+      const phoneNumber = formatPhone(req.body.phone);
+      User.findOne({
+        phone: phoneNumber
+      }, function (err, existingUser) {
+        if (existingUser) {
+          return res.status(409).send({message: "Phone number is already registered."});
+        }
 
-      // create new user
-      randomString(function (newSessionId) {
-        const user = new User({
-          fname: req.body.fname,
-          lname: req.body.lname,
-          phone: phoneNumber,
-          pwd: req.body.pwd,
-          sessionId: newSessionId
-        });
+        // create new user
+        randomString(function (newSessionId) {
+          const user = new User({
+            fname: req.body.fname,
+            lname: req.body.lname,
+            phone: phoneNumber,
+            pwd: req.body.pwd,
+            sessionId: newSessionId
+          });
 
-        user.save(function (err, result) {
-          if (err) {
-            return res.status(500).send({message: err.message});
-          }
-          res.status(200).send({token: createToken(result)});
+          user.save(function (err, result) {
+            if (err) {
+              return res.status(500).send({message: err.message});
+            }
+            res.status(200).send({token: createToken(result)});
+          });
         });
       });
-    });
+    } catch (e) {
+      res.status(409).send({message: "That's not a valid phone number."});
+    }
   },
   login: function (req, res) {
     // require params
@@ -90,16 +94,20 @@ module.exports = {
     }
 
     // look up user by phone
-    const phoneNumber = formatPhone(req.body.phone);
-    User.findOne({
-      phone: phoneNumber
-    }, function (err, existingUser) {
-      // check user and password
-      if (!existingUser || existingUser.pwd !== req.body.pwd) {
-        return res.status(401).send({message: "Invalid phone number and/or password."});
-      }
-      res.status(200).send({token: createToken(existingUser)});
-    });
+    try {
+      const phoneNumber = formatPhone(req.body.phone);
+      User.findOne({
+        phone: phoneNumber
+      }, function (err, existingUser) {
+        // check user and password
+        if (!existingUser || existingUser.pwd !== req.body.pwd) {
+          return res.status(401).send({message: "Invalid phone number and/or password."});
+        }
+        res.status(200).send({token: createToken(existingUser)});
+      });
+    } catch (e) {
+      res.status(401).send({message: "That's not a valid phone number."});
+    }
   },
   logout: function (req, res) {
     // change user's sessionId to a new random string
