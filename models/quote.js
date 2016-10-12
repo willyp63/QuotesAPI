@@ -183,7 +183,7 @@ function aggregateHeardByUsers (quotes) {
     }
     aggregatedQuotes.push({
       text: quoteGroup[0].text,
-      saidAt: quoteGroup[0].said_at,
+      saidAt: formatDate(quoteGroup[0].said_at),
       saidBy: {
         firstName: quoteGroup[0].said_by_first_name,
         lastName: quoteGroup[0].said_by_last_name,
@@ -193,4 +193,8 @@ function aggregateHeardByUsers (quotes) {
     });
   }
   return aggregatedQuotes;
+}
+
+function formatDate (date) {
+  return `${date.getMonth() + 1}/${date.getDate() + 1}/${date.getFullYear()}`;
 }
