@@ -1,8 +1,8 @@
 'use strict';
 
 const pg = require('pg');
-const connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/quotes';
-console.log(process.env.DATABASE_URL);
+// const connectionString = 'postgres://localhost:5432/quotes';
+const connectionString = 'postgres://yevrdwgfpjqgnj:vLgb1Dx4A3fa2hDQWSj2SMwIBY@ec2-204-236-228-133.compute-1.amazonaws.com:5432/d71t5q6hmbv5de';
 
 const client = new pg.Client(connectionString);
 client.connect();
