@@ -5,21 +5,24 @@ const database = require('../database/database.js');
 const Quote = require('../models/quote.js');
 
 module.exports = {
-  all: function (req, res) {
-    Quote.quotes()
+  mine: function (req, res) {
+    const query = req.query.q;
+    Quote.myAggregatedQuotes(req._userId)
          .then(function (quotes) {
            res.status(200).send({quotes: quotes});
          }).catch(database.sendDBErrorResponse.bind(null, res));
   },
-  mine: function (req, res) {
-    const query = req.query.q;
-    res.status(200).send({message: query});
-  },
   mySaid: function (req, res) {
-
+    Quote.mySaidAggregatedQuotes(req._userId)
+         .then(function (quotes) {
+           res.status(200).send({quotes: quotes});
+         }).catch(database.sendDBErrorResponse.bind(null, res));
   },
   myHeard: function (req, res) {
-
+    Quote.myHeardAggregatedQuotes(req._userId)
+         .then(function (quotes) {
+           res.status(200).send({quotes: quotes});
+         }).catch(database.sendDBErrorResponse.bind(null, res));
   },
   post: function (req, res) {
     // require params
@@ -44,9 +47,3 @@ module.exports = {
          }).catch(database.sendDBErrorResponse.bind(null, res));
   }
 };
-
-function formatQuote (data) {
-  return {
-
-  };
-}

@@ -23,7 +23,6 @@ app.post('/auth/register', authCtrl.register);
 app.post('/auth/login', authCtrl.login);
 
 // Quotes
-app.get('/quotes', authCtrl.requireAuth, quoteCtrl.all); // remove
 app.get('/quotes/me', authCtrl.requireAuth, quoteCtrl.mine);
 app.get('/quotes/me/said', authCtrl.requireAuth, quoteCtrl.mySaid);
 app.get('/quotes/me/heard', authCtrl.requireAuth, quoteCtrl.myHeard);
