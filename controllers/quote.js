@@ -35,7 +35,7 @@ module.exports = {
       return res.status(409).send({message: "That's not a valid phone number."});
     }
 
-    Quote.postQuote(req.body.text, req.body.saidAt, req.body.saidBy, req.body.heardBy)
+    Quote.insertQuoteWithRawFormData(req.body.text, req.body.saidAt, req.body.saidBy, req.body.heardBy)
          .then(function (results) {
            res.status(200).send({message: "We did it!"});
          }).catch(database.sendDBErrorResponse.bind(null, res));

@@ -5,7 +5,7 @@ const User = require('./user.js');
 const QuoteHear = require('./quoteHear.js');
 
 module.exports = {
-  postQuote: function (text, saidAt, saidBy, heardBy) {
+  insertQuoteWithRawFormData: function (text, saidAt, saidBy, heardBy) {
     const self = this;
     return new Promise(function (resolve, reject) {
       // get all users in saidBy and heardBy fields
