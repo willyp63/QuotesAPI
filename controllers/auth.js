@@ -1,70 +1,136 @@
 'use strict'
 
-const pg = require('pg');
-const connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/quotes';
-
 const jwt = require('jwt-simple');
 const moment = require('moment');
 const passwordHasher = require('password-hash-and-salt');
 const formatPhone = require('../util/formatPhone.js');
 
+const User = require('../models/user.js');
+
 module.exports = {
   register: function (req, res) {
-    console.log(process.env.DATABASE_URL);
-
     // require params
     if (!req.body.phoneNumber || !req.body.password ||
         !req.body.firstName || !req.body.lastName) {
       return res.status(409).send({message: "Please provide a firstName, lastName, phoneNumber, and password."});
     }
 
-    // connect to DB
-    const client = new pg.Client(connectionString);
-    client.connect();
+    // format phone number
+    try {
+      req.body.phoneNumber = formatPhone(req.body.phoneNumber);
+    } catch (e) {
+      return res.status(409).send({message: "That's not a valid phone number."});
+    }
+
     function handleDBError (err) {
       console.log(err);
-      client.end();
       res.status(500).send({message: "db error..."});
     }
 
     // check for existingUser
-    const phoneNumber = formatPhone(req.body.phoneNumber);
-    client.query("SELECT * FROM users WHERE phone_number = $1", [phoneNumber])
-          .then(function (results) {
-            if (results.rows.length) {
-              client.end();
+    User.userWithPhoneNumber(req.body.phoneNumber)
+        .then(function (user) {
+          if (user) {
+            if (user.password_hash) {
               // respond with error message
               res.status(409).send({message: "Phone number is already registered."});
             } else {
-              // insert user into db
-              const createdAt = new Date();
               // hash password
               passwordHasher(req.body.password).hash(function (err, passwordHash) {
-                client.query("INSERT INTO " +
-                             "users(created_at, first_name, last_name, phone_number, password_hash) " +
-                             "VALUES($1, $2, $3, $4, $5)",
-                             [createdAt, req.body.firstName, req.body.lastName, phoneNumber, passwordHash])
-                      .then(function (results) {
-                        client.end();
-                        // send back token
-                        res.status(200).send({token: createToken(phoneNumber)});
-                      }).catch(handleDBError);
+                // update user into db
+                User.updateUser(user.id, req.body.firstName, req.body.lastName, passwordHash)
+                    .then(function (results) {
+                      // send back token
+                      res.status(200).send({token: createToken(user.id), user: formatUser(req.body)});
+                    }).catch(handleDBError);
               });
             }
-          }).catch(handleDBError);
+          } else {
+            // hash password
+            passwordHasher(req.body.password).hash(function (err, passwordHash) {
+              // insert user into db
+              User.insertUser(req.body.firstName, req.body.lastName, req.body.phoneNumber, passwordHash)
+                  .then(function (userId) {
+                    // send back token
+                    res.status(200).send({token: createToken(userId), user: formatUser(req.body)});
+                  }).catch(handleDBError);
+            });
+          }
+        }).catch(handleDBError);
+  },
+  login: function (req, res) {
+    // require params
+    if (!req.body.phoneNumber || !req.body.password) {
+      return res.status(409).send({message: "Please provide a phoneNumber and password."});
+    }
+
+    // format phone number
+    try {
+      req.body.phoneNumber = formatPhone(req.body.phoneNumber);
+    } catch (e) {
+      return res.status(409).send({message: "That's not a valid phone number."});
+    }
+
+    function handleDBError (err) {
+      console.log(err);
+      res.status(500).send({message: "db error..."});
+    }
+
+    // look up user by phone
+    User.userWithPhoneNumber(req.body.phoneNumber)
+        .then(function (user) {
+          if (user) {
+            // check password
+            passwordHasher(req.body.password).verifyAgainst(user.password_hash, function (err, verified) {
+              if(err) {
+                  res.status(500).send({message: "Something went wrong..."});
+              } else if(verified) {
+                  res.status(200).send({token: createToken(user.id), user: formatUser(user)});
+              } else {
+                  res.status(401).send({message: "Invalid phone number and/or password."});
+              }
+            })
+          } else {
+            res.status(401).send({message: "Invalid phone number and/or password."});
+          }
+        }).catch(handleDBError);
   },
   requireAuth: function (req, res, next) {
-    // TODO
-    next();
+    // check for Auth header
+    if (!req.header("Authorization")) {
+      return res.status(401).send({
+        message: "Please make sure your request has an Authorization header."
+      });
+    }
+
+    // extract payload
+    const token = req.header("Authorization").split(' ')[1];
+    try {
+      // decode token and attach userPhoneNumber to request
+      const payload = jwt.decode(token, "CHANGE_THIS!!");
+      req._userId = payload.sub.userId;
+      next();
+    } catch (e) {
+      console.log(e);
+      return res.status(401).send({message: "Invalid or expired auth token."});
+    }
   }
 };
 
-function createToken (phoneNumber) {
+function createToken (userId) {
   const payload = {
     sub: {
-      userPhoneNumber: phoneNumber
+      userId: userId
     },
     exp: moment().add(90, 'days').unix()
   };
   return jwt.encode(payload, 'CHANGE_THIS!!');
+}
+
+function formatUser (data) {
+  return {
+    firstName: data.first_name || data.firstName,
+    lastName: data.last_name || data.lastName,
+    phoneNumber: data.phone_number || data.phoneNumber
+  };
 }
