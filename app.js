@@ -3,7 +3,7 @@
 const express = require('express');
 const app = express();
 
-const database = require('./database.js');
+const database = require('./database/database.js');
 const authCtrl = require('./controllers/auth.js');
 const quoteCtrl = require('./controllers/quote.js');
 

@@ -3,21 +3,25 @@
 const pg = require('pg');
 const connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/quotes';
 
+function newClient () {
+  const client = new pg.Client(connectionString);
+  client.connect();
+  return client;
+}
+
 module.exports = {
   reset: function (req, res) {
-    // connect to DB
-    const client = new pg.Client(connectionString);
-    client.connect();
+    const client = newClient();
 
     function handleDBError (err) {
       console.log(err);
       client.end();
-      res.status(500).send({message: "db error..."});
+      res.status(500).send({message: "Internal error. Sorry about that..."});
     }
 
     function handleSuccess () {
       client.end();
-      res.status(200).send({message: "db reset!"});
+      res.status(200).send({message: "Database reset!"});
     }
 
     function dropQuoteHears () {
@@ -84,5 +88,10 @@ module.exports = {
     .then(uniqueIndexQuoteHears, handleDBError)
     .then(indexQuoteHearsHeardByUserId, handleDBError)
     .then(handleSuccess, handleDBError);
+  },
+  newClient: newClient,
+  sendDBErrorResponse: function (res, err) {
+    console.log(`Database Error: ${err}`);
+    res.status(500).send({message: "Internal error. Sorry about that..."});
   }
 }

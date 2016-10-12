@@ -1,7 +1,7 @@
 'use strict'
 
 const formatPhone = require('../util/formatPhone.js');
-
+const database = require('../database/database.js');
 const Quote = require('../models/quote.js');
 
 module.exports = {
@@ -25,11 +25,6 @@ module.exports = {
       return res.status(409).send({message: "Please provide a text, saidAt, saidBy, and heardBy."});
     }
 
-    function handleDBError (err) {
-      console.log(err);
-      res.status(500).send({message: "db error..."});
-    }
-
     // format phone numbers
     try {
       req.body.saidBy.phoneNumber = formatPhone(req.body.saidBy.phoneNumber);
@@ -43,6 +38,6 @@ module.exports = {
     Quote.postQuote(req.body.text, req.body.saidAt, req.body.saidBy, req.body.heardBy)
          .then(function (results) {
            res.status(200).send({message: "We did it!"});
-         }).catch(handleDBError);
+         }).catch(database.sendDBErrorResponse.bind(null, res));
   }
 };

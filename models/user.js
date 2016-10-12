@@ -1,7 +1,6 @@
 'use strict'
 
-const pg = require('pg');
-const connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/quotes';
+const database = require('../database/database.js');
 
 module.exports = {
   userWithPhoneNumber: function (phoneNumber) {
@@ -9,15 +8,14 @@ module.exports = {
     return new Promise(function (resolve, reject) {
       self.usersWithPhoneNumbers([phoneNumber])
           .then(function (users) {
-            resolve(users[0]);
+            resolve(users[0]); // resolve to first row returned
           }).catch(reject);
     });
   },
   usersWithPhoneNumbers: function (phoneNumbers) {
+    const client = database.newClient();
     return new Promise(function (resolve, reject) {
-      const client = new pg.Client(connectionString);
-      client.connect();
-
+      // form where clause
       const whereClauses = [];
       for (let i = 0; i < phoneNumbers.length; i++) {
         whereClauses.push(`phone_number = $${i + 1}`);
@@ -25,82 +23,69 @@ module.exports = {
 
       client.query(`SELECT * FROM users WHERE ${whereClauses.join(" OR ")}`, phoneNumbers)
             .then(function (results) {
+              resolve(results.rows); // resolve to rows
               client.end();
-              resolve(results.rows);
             }).catch(function () {
-              client.end();
               reject(err);
+              client.end();
             });
     });
   },
-  insertUsersIfNotAlreadyInserted: function (usersToInsert) {
+  insertUsersIfNotAlreadyInserted: function (users) {
     const self = this;
     return new Promise(function(resolve, reject) {
-      const phoneNumbers = usersToInsert.map(user => user.phoneNumber);
-      self.usersWithPhoneNumbers(phoneNumbers)
-          .then(function (users) {
+      self.usersWithPhoneNumbers(users.map(user => user.phoneNumber))
+          .then(function (usersInDB) {
             // record all phone numbers already in DB
             const phoneNumbersInDB = {};
-            for (let i = 0; i < users.length; i++) {
-              phoneNumbersInDB[users[i].phone_number] = true;
+            for (let i = 0; i < usersInDB.length; i++) {
+              phoneNumbersInDB[usersInDB[i].phone_number] = true;
             }
 
-            // insert all users not in DB
+            // fire insertion query for all users not already in DB
             const insertionQueries = [];
-            for (let i = 0; i < usersToInsert.length; i++) {
-              const user = usersToInsert[i];
-              if (!phoneNumbersInDB[user.phoneNumber]) {
+            for (let i = 0; i < users.length; i++) {
+              if (!phoneNumbersInDB[users[i].phoneNumber]) {
                 insertionQueries.push(
-                  self.insertUser(user.firstName, user.lastName, user.phoneNumber)
+                  self.insertUser(users[i].firstName, users[i].lastName, users[i].phoneNumber)
                 );
               }
             }
 
-            // wait for all queries to finish
-            Promise.all(insertionQueries)
-                   .then(function (results) {
-                     resolve(results)
-                   }).catch(function (err) {
-                     reject(err);
-                   });
-          }).catch(function (err) {
-            reject(err);
-          });
+            // wait for all to finish or one to fail
+            Promise.all(insertionQueries).then(resolve).catch(reject);
+          }).catch(reject);
     });
   },
   insertUser: function (firstName, lastName, phoneNumber, passwordHash) {
+    const client = database.newClient();
     return new Promise(function (resolve, reject) {
-      const client = new pg.Client(connectionString);
-      client.connect();
-
       client.query("INSERT INTO " +
                    "users(created_at, first_name, last_name, phone_number, password_hash) " +
                    "VALUES($1, $2, $3, $4, $5) RETURNING id",
                    [new Date(), firstName, lastName, phoneNumber, passwordHash])
             .then(function (results) {
+              resolve(results.rows[0].id); // resolve to inserted row's id
               client.end();
-              resolve(results.rows[0].id);
             }).catch(function (err) {
-              client.end();
               reject(err);
+              client.end();
             });
     });
   },
   updateUser: function (userId, firstName, lastName, passwordHash) {
+    const client = database.newClient();
     return new Promise(function (resolve, reject) {
-      const client = new pg.Client(connectionString);
-      client.connect();
-
       client.query("UPDATE users " +
                    "SET first_name = $1, last_name = $2, password_hash = $3 " +
                    "WHERE id = $4",
                    [firstName, lastName, passwordHash, userId])
             .then(function (results) {
-              client.end();
               resolve(results);
-            }).catch(function (err) {
               client.end();
+            }).catch(function (err) {
               reject(err);
+              client.end();
             });
     });
   }

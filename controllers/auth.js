@@ -4,7 +4,7 @@ const jwt = require('jwt-simple');
 const moment = require('moment');
 const passwordHasher = require('password-hash-and-salt');
 const formatPhone = require('../util/formatPhone.js');
-
+const database = require('../database/database.js');
 const User = require('../models/user.js');
 
 module.exports = {
@@ -22,11 +22,6 @@ module.exports = {
       return res.status(409).send({message: "That's not a valid phone number."});
     }
 
-    function handleDBError (err) {
-      console.log(err);
-      res.status(500).send({message: "db error..."});
-    }
-
     // check for existingUser
     User.userWithPhoneNumber(req.body.phoneNumber)
         .then(function (user) {
@@ -42,7 +37,7 @@ module.exports = {
                     .then(function (results) {
                       // send back token
                       res.status(200).send({token: createToken(user.id), user: formatUser(req.body)});
-                    }).catch(handleDBError);
+                    }).catch(database.sendDBErrorResponse.bind(null, res));
               });
             }
           } else {
@@ -53,10 +48,10 @@ module.exports = {
                   .then(function (userId) {
                     // send back token
                     res.status(200).send({token: createToken(userId), user: formatUser(req.body)});
-                  }).catch(handleDBError);
+                  }).catch(database.sendDBErrorResponse.bind(null, res));
             });
           }
-        }).catch(handleDBError);
+        }).catch(database.sendDBErrorResponse.bind(null, res));
   },
   login: function (req, res) {
     // require params
@@ -69,11 +64,6 @@ module.exports = {
       req.body.phoneNumber = formatPhone(req.body.phoneNumber);
     } catch (e) {
       return res.status(409).send({message: "That's not a valid phone number."});
-    }
-
-    function handleDBError (err) {
-      console.log(err);
-      res.status(500).send({message: "db error..."});
     }
 
     // look up user by phone
@@ -93,7 +83,7 @@ module.exports = {
           } else {
             res.status(401).send({message: "Invalid phone number and/or password."});
           }
-        }).catch(handleDBError);
+        }).catch(database.sendDBErrorResponse.bind(null, res));
   },
   requireAuth: function (req, res, next) {
     // check for Auth header
