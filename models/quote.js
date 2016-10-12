@@ -5,6 +5,27 @@ const User = require('./user.js');
 const QuoteHear = require('./quoteHear.js');
 
 module.exports = {
+  qoutes: function () {
+    return new new Promise(function(resolve, reject) {
+      const client = database.newClient();
+      client.query("SELECT * " +
+                   "FROM quotes " +
+                   "JOIN users AS said_by_users " +
+                   "ON quotes.said_by_user_id = said_by_users.id " +
+                   "LEFT JOIN quote_hears " + // a quote no one heard??
+                   "ON quote_hears.quote_id = quotes.id " +
+                   "JOIN users AS heard_by_users " +
+                   "ON quote_hears.heard_by_user_id = heard_by_users.id")
+            .then(function (results) {
+              const parsedRows = parseQuoteRowAfterJoin(results.rows);
+              resolve(parsedRows);
+              client.end();
+            }).catch(function (err) {
+              reject(err);
+              client.end();
+            })
+    });
+  },
   insertQuoteWithRawFormData: function (text, saidAt, saidBy, heardBy) {
     const self = this;
     return new Promise(function (resolve, reject) {
@@ -51,4 +72,9 @@ module.exports = {
             });
     });
   }
+}
+
+function parseQuoteRowAfterJoin (rows) {
+  console.log(rows);
+  return rows;
 }

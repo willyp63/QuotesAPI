@@ -6,7 +6,10 @@ const Quote = require('../models/quote.js');
 
 module.exports = {
   all: function (req, res) {
-
+    Quote.quotes()
+         .then(function (quotes) {
+           res.status(200).send({quotes: quotes});
+         }).catch(database.sendDBErrorResponse.bind(null, res));
   },
   mine: function (req, res) {
     const query = req.query.q;
@@ -41,3 +44,9 @@ module.exports = {
          }).catch(database.sendDBErrorResponse.bind(null, res));
   }
 };
+
+function formatQuote (data) {
+  return {
+
+  };
+}
