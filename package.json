@@ -11,11 +11,11 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.15.2",
-    "crypto": "0.0.3",
     "express": "^4.14.0",
     "jwt-simple": "^0.5.0",
     "moment": "^2.15.1",
-    "mongoose": "^4.6.3",
-    "node-phonenumber": "^0.2.4"
+    "node-phonenumber": "^0.2.4",
+    "password-hash-and-salt": "^0.1.4",
+    "pg": "^6.1.0"
   }
 }

@@ -11,7 +11,8 @@ module.exports = {
     });
   },
   mine: function (req, res) {
-
+    const query = req.query.q;
+    res.status(200).send({message: query});
   },
   mySaid: function (req, res) {
 
