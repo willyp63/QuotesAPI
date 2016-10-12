@@ -1,15 +1,7 @@
 'use strict';
 
 const pg = require('pg');
-// const connectionString = 'postgres://localhost:5432/quotes';
-const connectionString = 'postgres://yevrdwgfpjqgnj:vLgb1Dx4A3fa2hDQWSj2SMwIBY@ec2-204-236-228-133.compute-1.amazonaws.com:5432/d71t5q6hmbv5de';
-
-const client = new pg.Client(connectionString);
-client.connect();
-
-function closeConnection () {
-  client.end();
-}
+const connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/quotes';
 
 function dropQuoteHears () {
   return client.query("DROP TABLE quote_hears");
@@ -65,13 +57,30 @@ function indexQuoteHearsHeardByUserId () {
                               "ON quote_hears (heard_by_user_id)");
 }
 
-dropQuoteHears()
-.then(dropQuotes, dropQuotes)
-.then(dropUsers, dropUsers)
-.then(createUsers, closeConnection)
-.then(uniqueIndexUserPhoneNumber, closeConnection)
-.then(createQuotes, closeConnection)
-.then(createQuoteHears, closeConnection)
-.then(uniqueIndexQuoteHears, closeConnection)
-.then(indexQuoteHearsHeardByUserId, closeConnection)
-.then(closeConnection, closeConnection);
+module.exports {
+  reset: function (req, res) {
+    // connect to DB
+    const client = new pg.Client(connectionString);
+    client.connect();
+    function handleDBError (err) {
+      console.log(err);
+      client.end();
+      res.status(500).send({message: "db error..."});
+    }
+    function handleSuccess () {
+      client.end();
+      res.status(200).send({message: "db reset!"});
+    }
+
+    dropQuoteHears()
+    .then(dropQuotes, dropQuotes)
+    .then(dropUsers, dropUsers)
+    .then(createUsers, handleDBError)
+    .then(uniqueIndexUserPhoneNumber, handleDBError)
+    .then(createQuotes, handleDBError)
+    .then(createQuoteHears, handleDBError)
+    .then(uniqueIndexQuoteHears, handleDBError)
+    .then(indexQuoteHearsHeardByUserId, handleDBError)
+    .then(handleSuccess, handleDBError);
+  }
+}

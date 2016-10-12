@@ -3,6 +3,7 @@
 const express = require('express');
 const app = express();
 
+const database = require('./database.js');
 const authCtrl = require('./controllers/auth.js');
 const userCtrl = require('./controllers/user.js');
 //const quoteCtrl = require('./controllers/quote.js');
@@ -14,6 +15,8 @@ app.use(bodyParser.json());
 // Set Response Headers
 const headers = require('./middleware/headers.js');
 app.use(headers);
+
+app.post('/db/reset', database.reset);
 
 // User Auth
 app.post('/auth/register', authCtrl.register);
