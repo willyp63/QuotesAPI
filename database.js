@@ -75,9 +75,9 @@ module.exports = {
     }
 
     dropQuoteHears()
-    .then(dropQuotes, handleDBError)
+    .then(dropQuotes, dropQuotes)
     .then(dropUsers, dropUsers)
-    .then(createUsers, handleDBError)
+    .then(createUsers, createUsers)
     .then(uniqueIndexUserPhoneNumber, handleDBError)
     .then(createQuotes, handleDBError)
     .then(createQuoteHears, handleDBError)
