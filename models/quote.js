@@ -4,7 +4,7 @@ const pg = require('pg');
 const connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/quotes';
 
 const User = require('./user.js');
-const QuoteHear = require('./QuoteHear.js');
+const QuoteHear = require('./quoteHear.js');
 
 module.exports = {
   postQuote: function (text, saidAt, saidBy, heardBy) {
