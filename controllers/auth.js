@@ -10,6 +10,8 @@ const formatPhone = require('../util/formatPhone.js');
 
 module.exports = {
   register: function (req, res) {
+    console.log(process.env.DATABASE_URL);
+
     // require params
     if (!req.body.phoneNumber || !req.body.password ||
         !req.body.firstName || !req.body.lastName) {
