@@ -47,7 +47,7 @@ module.exports = {
 
     Quote.insertQuoteWithRawFormData(req.body.text, req.body.saidAt, req.body.saidBy, req.body.heardBy)
          .then(function (results) {
-           res.status(200).send({message: "We did it!"});
+           res.status(200).send({message: "Quote posted successfully!"});
          }).catch(database.sendDBErrorResponse.bind(null, res));
   }
 };
