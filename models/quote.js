@@ -232,5 +232,6 @@ function aggregateHeardByUsers (quotes) {
 }
 
 function formatDate (date) {
+  date.setDate(date.getDate() - 1);
   return `${date.getMonth() + 1}/${date.getDate() + 1}/${date.getFullYear()}`;
 }
