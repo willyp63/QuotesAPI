@@ -39,7 +39,7 @@ module.exports = {
                    "ON quote_hears.quote_id = quotes.id " +
                    "LEFT JOIN users AS heard_by_users " +
                    "ON quote_hears.heard_by_user_id = heard_by_users.id " +
-                   "ORDER BY quotes.said_at";
+                   "ORDER BY quotes.said_at DESC";
     } else {
       dbQueryParams = [userId];
       dbQueryString = "SELECT quotes.*, " +
@@ -64,7 +64,7 @@ module.exports = {
                    "ON quote_hears.quote_id = quotes.id " +
                    "LEFT JOIN users AS heard_by_users " +
                    "ON quote_hears.heard_by_user_id = heard_by_users.id " +
-                   "ORDER BY quotes.said_at";
+                   "ORDER BY quotes.said_at DESC";
     }
 
     return new Promise(function(resolve, reject) {
@@ -98,7 +98,7 @@ module.exports = {
                    "LEFT JOIN users AS heard_by_users " +
                    "ON quote_hears.heard_by_user_id = heard_by_users.id " +
                    "WHERE quotes.said_by_user_id = $1 " +
-                   "ORDER BY quotes.said_at", [userId])
+                   "ORDER BY quotes.said_at DESC", [userId])
             .then(function (results) {
               const quotes = aggregateHeardByUsers(results.rows);
               resolve(quotes);
@@ -133,7 +133,7 @@ module.exports = {
                    "ON quote_hears.quote_id = quotes.id " +
                    "LEFT JOIN users AS heard_by_users " +
                    "ON quote_hears.heard_by_user_id = heard_by_users.id " +
-                   "ORDER BY quotes.said_at", [userId])
+                   "ORDER BY quotes.said_at DESC", [userId])
             .then(function (results) {
               const quotes = aggregateHeardByUsers(results.rows);
               resolve(quotes);
