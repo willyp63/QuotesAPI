@@ -5,10 +5,44 @@ const User = require('./user.js');
 const QuoteHear = require('./quoteHear.js');
 
 module.exports = {
-  myAggregatedQuotes: function (userId) {
-    return new Promise(function(resolve, reject) {
-      const client = database.newClient();
-      client.query("SELECT quotes.*, " +
+  myAggregatedQuotes: function (userId, query) {
+    let dbQueryString, dbQueryParams;
+    if (query) {
+      dbQueryParams = [userId, query.toLowerCase()];
+      dbQueryString = "SELECT quotes.*, " +
+                   "said_by_users.first_name AS said_by_first_name, " +
+                   "said_by_users.last_name AS said_by_last_name, " +
+                   "said_by_users.phone_number AS said_by_phone_number, " +
+                   "heard_by_users.first_name AS heard_by_first_name, " +
+                   "heard_by_users.last_name AS heard_by_last_name, " +
+                   "heard_by_users.phone_number AS heard_by_phone_number " +
+                   "FROM ( " +
+                      "SELECT quotes.* " +
+                      "FROM quotes " +
+                      "JOIN users AS said_by_users " +
+                      "ON quotes.said_by_user_id = said_by_users.id " +
+                      "LEFT JOIN quote_hears " + // a quote no one heard??
+                      "ON quote_hears.quote_id = quotes.id " +
+                      "LEFT JOIN users AS heard_by_users " +
+                      "ON quote_hears.heard_by_user_id = heard_by_users.id " +
+                      "WHERE (quotes.said_by_user_id = $1 " +
+                         "OR quote_hears.heard_by_user_id = $1) " +
+                         "AND " +
+                         "(LOWER(quotes.text) LIKE '%' || $2 || '%' " +
+                         "OR LOWER(said_by_users.first_name || ' ' || said_by_users.last_name) LIKE '%' || $2 || '%' " +
+                         "OR LOWER(heard_by_users.first_name || ' ' || heard_by_users.last_name) LIKE '%' || $2 || '%') " +
+                      "GROUP BY quotes.id " +
+                   ") AS quotes " +
+                   "JOIN users AS said_by_users " +
+                   "ON quotes.said_by_user_id = said_by_users.id " +
+                   "LEFT JOIN quote_hears " + // a quote no one heard??
+                   "ON quote_hears.quote_id = quotes.id " +
+                   "LEFT JOIN users AS heard_by_users " +
+                   "ON quote_hears.heard_by_user_id = heard_by_users.id " +
+                   "ORDER BY quotes.said_at";
+    } else {
+      dbQueryParams = [userId];
+      dbQueryString = "SELECT quotes.*, " +
                    "said_by_users.first_name AS said_by_first_name, " +
                    "said_by_users.last_name AS said_by_last_name, " +
                    "said_by_users.phone_number AS said_by_phone_number, " +
@@ -30,7 +64,12 @@ module.exports = {
                    "ON quote_hears.quote_id = quotes.id " +
                    "LEFT JOIN users AS heard_by_users " +
                    "ON quote_hears.heard_by_user_id = heard_by_users.id " +
-                   "ORDER BY quotes.id", [userId])
+                   "ORDER BY quotes.said_at";
+    }
+
+    return new Promise(function(resolve, reject) {
+      const client = database.newClient();
+      client.query(dbQueryString, dbQueryParams)
             .then(function (results) {
               const quotes = aggregateHeardByUsers(results.rows);
               resolve(quotes);
@@ -59,7 +98,7 @@ module.exports = {
                    "LEFT JOIN users AS heard_by_users " +
                    "ON quote_hears.heard_by_user_id = heard_by_users.id " +
                    "WHERE quotes.said_by_user_id = $1 " +
-                   "ORDER BY quotes.id", [userId])
+                   "ORDER BY quotes.said_at", [userId])
             .then(function (results) {
               const quotes = aggregateHeardByUsers(results.rows);
               resolve(quotes);
@@ -94,7 +133,7 @@ module.exports = {
                    "ON quote_hears.quote_id = quotes.id " +
                    "LEFT JOIN users AS heard_by_users " +
                    "ON quote_hears.heard_by_user_id = heard_by_users.id " +
-                   "ORDER BY quotes.id", [userId])
+                   "ORDER BY quotes.said_at", [userId])
             .then(function (results) {
               const quotes = aggregateHeardByUsers(results.rows);
               resolve(quotes);

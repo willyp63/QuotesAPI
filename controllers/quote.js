@@ -7,7 +7,7 @@ const Quote = require('../models/quote.js');
 module.exports = {
   mine: function (req, res) {
     const query = req.query.q;
-    Quote.myAggregatedQuotes(req._userId)
+    Quote.myAggregatedQuotes(req._userId, query)
          .then(function (quotes) {
            res.status(200).send({quotes: quotes});
          }).catch(database.sendDBErrorResponse.bind(null, res));
