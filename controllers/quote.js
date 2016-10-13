@@ -41,6 +41,10 @@ module.exports = {
       return res.status(409).send({message: "That's not a valid phone number."});
     }
 
+    // format said at date and move back one day (weird bug when posting dates as strings)
+    req.body.saidAt = new Date(req.body.saidAt);
+    req.body.saidAt.setDate(req.body.saidAt.getDate() - 1);
+
     Quote.insertQuoteWithRawFormData(req.body.text, req.body.saidAt, req.body.saidBy, req.body.heardBy)
          .then(function (results) {
            res.status(200).send({message: "We did it!"});
