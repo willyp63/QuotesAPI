@@ -51,17 +51,14 @@ module.exports = {
                    "heard_by_users.first_name AS heard_by_first_name, " +
                    "heard_by_users.last_name AS heard_by_last_name, " +
                    "heard_by_users.phone_number AS heard_by_phone_number " +
-                   "FROM ( " +
-                      "SELECT * " +
-                      "FROM quotes " +
-                      "WHERE quotes.said_by_user_id = $1 " +
-                   ") AS quotes " +
+                   "FROM quotes " +
                    "JOIN users AS said_by_users " +
                    "ON quotes.said_by_user_id = said_by_users.id " +
                    "LEFT JOIN quote_hears " + // a quote no one heard??
                    "ON quote_hears.quote_id = quotes.id " +
                    "LEFT JOIN users AS heard_by_users " +
                    "ON quote_hears.heard_by_user_id = heard_by_users.id " +
+                   "WHERE quotes.said_by_user_id = $1 " +
                    "ORDER BY quotes.id", [userId])
             .then(function (results) {
               const quotes = aggregateHeardByUsers(results.rows);
