@@ -18,19 +18,24 @@ module.exports = {
                    "heard_by_users.phone_number AS heard_by_phone_number " +
                    "FROM ( " +
                       "SELECT quotes.* " +
-                      "FROM quotes " +
+                      "FROM ( " +
+                        "SELECT quotes.* " +
+                        "FROM quotes " +
+                        "LEFT JOIN quote_hears " + // a quote no one heard??
+                        "ON quote_hears.quote_id = quotes.id " +
+                        "WHERE quotes.said_by_user_id = $1 " +
+                           "OR quote_hears.heard_by_user_id = $1 " +
+                        "GROUP BY quotes.id " +
+                      ") AS quotes " +
                       "JOIN users AS said_by_users " +
                       "ON quotes.said_by_user_id = said_by_users.id " +
                       "LEFT JOIN quote_hears " + // a quote no one heard??
                       "ON quote_hears.quote_id = quotes.id " +
                       "LEFT JOIN users AS heard_by_users " +
                       "ON quote_hears.heard_by_user_id = heard_by_users.id " +
-                      "WHERE (quotes.said_by_user_id = $1 " +
-                         "OR quote_hears.heard_by_user_id = $1) " +
-                         "AND " +
-                         "(LOWER(quotes.text) LIKE '%' || $2 || '%' " +
+                      "WHERE LOWER(quotes.text) LIKE '%' || $2 || '%' " +
                          "OR LOWER(said_by_users.first_name || ' ' || said_by_users.last_name) LIKE '%' || $2 || '%' " +
-                         "OR LOWER(heard_by_users.first_name || ' ' || heard_by_users.last_name) LIKE '%' || $2 || '%') " +
+                         "OR LOWER(heard_by_users.first_name || ' ' || heard_by_users.last_name) LIKE '%' || $2 || '%' " +
                       "GROUP BY quotes.id " +
                    ") AS quotes " +
                    "JOIN users AS said_by_users " +
