@@ -7,10 +7,17 @@ const Quote = require('../models/quote.js');
 module.exports = {
   mine: function (req, res) {
     const query = req.query.q;
-    Quote.myAggregatedQuotes(req._userId, query)
-         .then(function (quotes) {
-           res.status(200).send({quotes: quotes});
-         }).catch(database.sendDBErrorResponse.bind(null, res));
+    if (query) {
+      Quote.myAggregatedQuotesWithQuery(req._userId, query)
+           .then(function (quotes) {
+             res.status(200).send({quotes: quotes});
+           }).catch(database.sendDBErrorResponse.bind(null, res));
+    } else {
+      Quote.myAggregatedQuotes(req._userId)
+           .then(function (quotes) {
+             res.status(200).send({quotes: quotes});
+           }).catch(database.sendDBErrorResponse.bind(null, res));
+    }
   },
   mySaid: function (req, res) {
     Quote.mySaidAggregatedQuotes(req._userId)
