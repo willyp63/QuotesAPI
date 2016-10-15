@@ -16,7 +16,7 @@ const headers = require('./middleware/headers.js');
 app.use(headers);
 
 // !!!DANGEROUS ROUTE!!! (remove when in production)
-app.post('/db/reset', database.reset);
+// app.post('/db/reset', database.reset);
 
 // User Auth
 app.post('/auth/register', authCtrl.register);
