@@ -38,8 +38,6 @@ module.exports = {
       return res.status(409).send({message: "Please provide a text, saidAt, saidBy, and heardBy."});
     }
 
-    console.log(req.body);
-
     // format phone numbers
     try {
       req.body.saidBy.phoneNumber = formatPhone(req.body.saidBy.phoneNumber);
@@ -47,11 +45,8 @@ module.exports = {
         req.body.heardBy[i].phoneNumber = formatPhone(req.body.heardBy[i].phoneNumber);
       }
     } catch (e) {
-      console.log("bad");
       return res.status(409).send({message: "That's not a valid phone number."});
     }
-
-    console.log("good");
 
     Quote.insertQuoteWithRawFormData(req.body.text, req.body.saidAt, req.body.saidBy, req.body.heardBy)
          .then(function (results) {
