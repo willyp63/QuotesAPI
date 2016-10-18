@@ -3,8 +3,7 @@
 const phoneFormatter = require('phone-formatter');
 
 module.exports = function (number) {
-  let formatted = phoneFormatter.normalize(number);
-  formatted = phoneFormatter.format(number, "NNNNNNNNNN");
+  const formatted = phoneFormatter.format(number, "NNNNNNNNNN");
   console.log(`got: ${formatted}`);
   if (formatted.length != 10) {
     throw new Error("Invalid phone number!");
