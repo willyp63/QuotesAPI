@@ -45,7 +45,7 @@ module.exports = {
         req.body.heardBy[i].phoneNumber = formatPhone(req.body.heardBy[i].phoneNumber);
       }
     } catch (e) {
-      return res.status(409).send({message: "That's not a valid phone number."});
+      return res.status(409).send({message: "That's not a real phone number!"});
     }
 
     Quote.insertQuoteWithRawFormData(req.body.text, req.body.saidAt, req.body.saidBy, req.body.heardBy)

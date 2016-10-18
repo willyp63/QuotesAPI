@@ -19,7 +19,7 @@ module.exports = {
     try {
       req.body.phoneNumber = formatPhone(req.body.phoneNumber);
     } catch (e) {
-      return res.status(409).send({message: "That's not a valid phone number."});
+      return res.status(409).send({message: "That's not a real phone number!"});
     }
 
     // check for existingUser
@@ -63,7 +63,7 @@ module.exports = {
     try {
       req.body.phoneNumber = formatPhone(req.body.phoneNumber);
     } catch (e) {
-      return res.status(409).send({message: "That's not a valid phone number."});
+      return res.status(409).send({message: "That's not a real phone number!"});
     }
 
     // look up user by phone
@@ -102,7 +102,7 @@ module.exports = {
       next();
     } catch (e) {
       console.log(e);
-      return res.status(401).send({message: "Invalid or expired auth token."});
+      return res.status(401).send({message: "Invalid or expired auth token!"});
     }
   }
 };
