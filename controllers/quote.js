@@ -48,6 +48,7 @@ module.exports = {
       return res.status(409).send({message: "That's not a valid phone number."});
     }
 
+    console.log("here");
     console.log(req.body);
 
     Quote.insertQuoteWithRawFormData(req.body.text, req.body.saidAt, req.body.saidBy, req.body.heardBy)
