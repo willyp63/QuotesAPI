@@ -16,6 +16,6 @@
     "moment": "^2.15.1",
     "password-hash-and-salt": "^0.1.4",
     "pg": "^6.1.0",
-    "phone-formatter": "0.0.2"
+    "phone": "^1.0.8"
   }
 }

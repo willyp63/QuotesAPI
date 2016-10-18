@@ -1,11 +1,11 @@
 'use strict'
 
-const phoneFormatter = require('phone-formatter');
+const phoneFormatter = require('phone');
 
 module.exports = function (number) {
-  const formatted = phoneFormatter.format(number, "NNNNNNNNNN");
+  const formatted = phoneFormatter(number)[0];
   console.log(`got: ${formatted}`);
-  if (formatted.length != 10) {
+  if (formatted.length != 12) {
     throw new Error("Invalid phone number!");
   }
   return formatted;
