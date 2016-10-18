@@ -45,6 +45,7 @@ module.exports = {
         req.body.heardBy[i].phoneNumber = formatPhone(req.body.heardBy[i].phoneNumber);
       }
     } catch (e) {
+      console.log("bad");
       return res.status(409).send({message: "That's not a valid phone number."});
     }
 
