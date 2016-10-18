@@ -48,6 +48,8 @@ module.exports = {
       return res.status(409).send({message: "That's not a valid phone number."});
     }
 
+    console.log(req.body);
+
     Quote.insertQuoteWithRawFormData(req.body.text, req.body.saidAt, req.body.saidBy, req.body.heardBy)
          .then(function (results) {
            res.status(200).send({message: "Quote posted successfully!"});
